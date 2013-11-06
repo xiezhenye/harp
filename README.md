@@ -1,4 +1,4 @@
 harp
 ====
 
-A reliable active - standby HA service
+Reliable active - standby HA utilities.
