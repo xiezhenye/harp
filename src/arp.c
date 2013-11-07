@@ -15,7 +15,9 @@ arp_op_t arp_packet_to_arp_op(arp_packet_t in) {
   return ret; 
 }
 
-int build_arp_op(arp_op_t *ret, u_short op, const char *sndr_hw_addr, const char *sndr_ip_addr, const char *rcpt_hw_addr, const char *rcpt_ip_addr) {
+int build_arp_op(arp_op_t *ret, u_short op, 
+  const char *sndr_hw_addr, const char *sndr_ip_addr, 
+  const char *rcpt_hw_addr, const char *rcpt_ip_addr) {
   ret->op = op;
   if (ether_aton_r(sndr_hw_addr, &(ret->sndr_hw_addr)) == NULL) {
     return 1;
@@ -66,7 +68,7 @@ void print_arp_op(arp_op_t in) {
   print_mac(in.sndr_hw_addr);
   printf(" ");
   print_ip(in.sndr_ip_addr);
-  printf(in.op == ARP_REQUEST ? " rqst " : " rply ");
+  printf(ntohs(in.op) == ARP_REQUEST ? " rqst " : " rply ");
   print_mac(in.rcpt_hw_addr);
   printf(" ");
   print_ip(in.rcpt_ip_addr);
