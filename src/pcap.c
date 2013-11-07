@@ -44,12 +44,11 @@ int listen_pcap(const char *dev, const harp_desc_t *p_harp, char *errbuf, const 
 }
 
 void on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char * packet) {
-  int i=0;
   arp_packet_t *p_arp_packet = (arp_packet_t *)packet;
   /*
   printf("Received Packet Size: %d bytes\n", pkthdr->len);
   */
-  if (ntohs(p_arp_packet->hw_type) != 1 || ntohs(p_arp_packet->prot_type) != 0x0800){
+  if (ntohs(p_arp_packet->hw_type) != ETHER_HW_TYPE || ntohs(p_arp_packet->prot_type) != IP_PROTO_TYPE){
     return;
   }
   if (ntohs(p_arp_packet->op) != ARP_REQUEST) {
@@ -57,9 +56,10 @@ void on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char * pac
   }
 
   harp_desc_t *p_harp = (harp_desc_t *) arg;
+  arp_op_t op = arp_packet_to_arp_op(*p_arp_packet);
   if (p_harp->vip != *(in_addr_t *)(p_arp_packet->rcpt_ip_addr)) {
     return;
   }
-  print_arp_op(arp_packet_to_arp_op(*p_arp_packet));
+  print_arp_op(op);
 }
 
