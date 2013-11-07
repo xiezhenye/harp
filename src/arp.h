@@ -44,7 +44,8 @@ arp_packet_t build_arp_packet(arp_op_t in);
 int build_arp_op(arp_op_t *ret, u_short op, 
   const char *sndr_hw_addr, const char *sndr_ip_addr, 
   const char *rcpt_hw_addr, const char *rcpt_ip_addr);
-void print_arp_op(arp_op_t in);
+void print_arp_op(arp_op_t *in);
+void print_arp_packet(arp_packet_t *in);
 void send_arp(arp_op_t arp_op);
 
 #endif

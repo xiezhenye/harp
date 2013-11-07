@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <stdio.h>
+
 #include "arp.h"
 
 arp_op_t arp_packet_to_arp_op(arp_packet_t in) {
@@ -19,13 +20,13 @@ int build_arp_op(arp_op_t *ret, u_short op,
   const char *sndr_hw_addr, const char *sndr_ip_addr, 
   const char *rcpt_hw_addr, const char *rcpt_ip_addr) {
   ret->op = op;
-  if (ether_aton_r(sndr_hw_addr, &(ret->sndr_hw_addr)) == NULL) {
+  if (!ether_aton_r(sndr_hw_addr, &(ret->sndr_hw_addr))) {
     return 1;
   }
   if (!inet_aton(sndr_ip_addr, &(ret->sndr_ip_addr))) {
     return 2;
   }
-  if (ether_aton_r(rcpt_hw_addr, &(ret->rcpt_hw_addr)) == NULL) {
+  if (!ether_aton_r(rcpt_hw_addr, &(ret->rcpt_hw_addr))) {
     return 3;
   }
   if (!inet_aton(rcpt_ip_addr, &(ret->rcpt_ip_addr))) {
@@ -52,32 +53,49 @@ arp_packet_t build_arp_packet(arp_op_t in) {
   return ret; 
 }
 
-void print_mac(struct ether_addr mac) {
-  char *t = (char *)(&mac);
+void print_mac(struct ether_addr *mac) {
+  char *t = (char *)(mac);
   printf("%02hhX:%02hhX:%02hhX:%02hhX:%02hhX:%02hhX",
     t[0],t[1],t[2],t[3],t[4],t[5]);
 }
 
-void print_ip(struct in_addr ip) {
-  unsigned char *t = (unsigned char *)(&ip);
+void print_ip(struct in_addr *ip) {
+  unsigned char *t = (unsigned char *)(ip);
   printf("%d.%d.%d.%d", 
     t[0],t[1],t[2],t[3]);
 }
 
-void print_arp_op(arp_op_t in) {
-  print_mac(in.sndr_hw_addr);
+void print_arp_op(arp_op_t *in) {
+  print_mac(&in->sndr_hw_addr);
   printf(" ");
-  print_ip(in.sndr_ip_addr);
-  printf(ntohs(in.op) == ARP_REQUEST ? " rqst " : " rply ");
-  print_mac(in.rcpt_hw_addr);
+  print_ip(&in->sndr_ip_addr);
+  printf(ntohs(in->op) == ARP_REQUEST ? " rqst " : " rply ");
+  print_mac(&in->rcpt_hw_addr);
   printf(" ");
-  print_ip(in.rcpt_ip_addr);
+  print_ip(&in->rcpt_ip_addr);
   printf("\n");
 }
 
-void print_arp_packet(arp_packet_t in) {
-  
+void print_arp_packet(arp_packet_t *in) {
+  print_mac((struct ether_addr *)in->targ_hw_addr);
+  printf("\n");
+  print_mac((struct ether_addr *)in->src_hw_addr);
+  printf("\n");
+  printf("0x%04hX\n0x%04hX\n0x%04hX\n%hhd\n%hhd\n0x%04hX\n",
+    ntohs(in->frame_type), ntohs(in->hw_type), ntohs(in->prot_type),
+    in->hw_addr_size, in->prot_addr_size, ntohs(in->op));
+  print_mac((struct ether_addr *)in->sndr_hw_addr);
+  printf("\n");
+  print_ip((struct in_addr *)in->sndr_ip_addr);
+  printf("\n");
+  print_mac((struct ether_addr *)in->rcpt_hw_addr);
+  printf("\n");
+  print_ip((struct in_addr *)in->rcpt_ip_addr);
+  printf("\n\n");
 }
+
+
+
 /*
 int main(){
   arp_op_t op;
