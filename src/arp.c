@@ -5,13 +5,14 @@
 #include <stdio.h>
 #include "arp.h"
 
-
 arp_op_t arp_packet_to_arp_op(arp_packet_t in) {
-  return *arp_packet_p_to_arp_op_p(&in);
-}
-
-arp_op_t *arp_packet_p_to_arp_op_p(arp_packet_t *in) {
-  return (arp_op_t *)(&in->op);
+  arp_op_t ret;
+  ret.op = in.op;
+  memcpy(&(ret.sndr_hw_addr), in.sndr_hw_addr, ETH_HW_ADDR_LEN);
+  memcpy(&(ret.sndr_ip_addr), in.sndr_ip_addr, IP_ADDR_LEN); 
+  memcpy(&(ret.rcpt_hw_addr), in.rcpt_hw_addr, ETH_HW_ADDR_LEN); 
+  memcpy(&(ret.rcpt_ip_addr), in.rcpt_ip_addr, IP_ADDR_LEN); 
+  return ret; 
 }
 
 int build_arp_op(arp_op_t *ret, u_short op, const char *sndr_hw_addr, const char *sndr_ip_addr, const char *rcpt_hw_addr, const char *rcpt_ip_addr) {
@@ -40,7 +41,11 @@ arp_packet_t build_arp_packet(arp_op_t in) {
   ret.prot_addr_size = IP_ADDR_LEN;
   memcpy(&(ret.targ_hw_addr), &(in.rcpt_hw_addr), ETH_HW_ADDR_LEN);
   memcpy(&(ret.src_hw_addr), &(in.sndr_hw_addr), ETH_HW_ADDR_LEN); 
-  memcpy(&(ret.op), &in, sizeof(in));
+  ret.op = in.op;
+  memcpy(ret.sndr_hw_addr, &(in.sndr_hw_addr), ETH_HW_ADDR_LEN);
+  memcpy(ret.sndr_ip_addr, &(in.sndr_ip_addr), IP_ADDR_LEN); 
+  memcpy(ret.rcpt_hw_addr, &(in.rcpt_hw_addr), ETH_HW_ADDR_LEN); 
+  memcpy(ret.rcpt_ip_addr, &(in.rcpt_ip_addr), IP_ADDR_LEN); 
   bzero(ret.padding, 18);
   return ret; 
 }

@@ -40,7 +40,6 @@ typedef struct arp_op {
 } arp_op_t;
 
 arp_op_t arp_packet_to_arp_op(arp_packet_t in);
-arp_op_t *arp_packet_p_to_arp_op_p(arp_packet_t *in);
 arp_packet_t build_arp_packet(arp_op_t in);
 int build_arp_op(arp_op_t *ret, u_short op, const char *sndr_hw_addr, const char *sndr_ip_addr, const char *rcpt_hw_addr, const char *rcpt_ip_addr);
 void print_arp_op(arp_op_t in);
