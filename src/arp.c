@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <stdio.h>
+#include <net/if.h>
 
 #include "arp.h"
 
@@ -19,7 +20,7 @@ arp_op_t arp_packet_to_arp_op(arp_packet_t in) {
 int build_arp_op(arp_op_t *ret, u_short op, 
   const char *sndr_hw_addr, const char *sndr_ip_addr, 
   const char *rcpt_hw_addr, const char *rcpt_ip_addr) {
-  ret->op = op;
+  ret->op = htons(op);
   if (!ether_aton_r(sndr_hw_addr, &(ret->sndr_hw_addr))) {
     return 1;
   }
@@ -35,22 +36,20 @@ int build_arp_op(arp_op_t *ret, u_short op,
   return 0;
 }
 
-arp_packet_t build_arp_packet(arp_op_t in) {
-  arp_packet_t ret;
-  ret.frame_type = ARP_FRAME_TYPE;
-  ret.hw_type = ETHER_HW_TYPE;
-  ret.prot_type = IP_PROTO_TYPE;
-  ret.hw_addr_size = ETH_HW_ADDR_LEN;
-  ret.prot_addr_size = IP_ADDR_LEN;
-  memcpy(&(ret.targ_hw_addr), &(in.rcpt_hw_addr), ETH_HW_ADDR_LEN);
-  memcpy(&(ret.src_hw_addr), &(in.sndr_hw_addr), ETH_HW_ADDR_LEN); 
-  ret.op = in.op;
-  memcpy(ret.sndr_hw_addr, &(in.sndr_hw_addr), ETH_HW_ADDR_LEN);
-  memcpy(ret.sndr_ip_addr, &(in.sndr_ip_addr), IP_ADDR_LEN); 
-  memcpy(ret.rcpt_hw_addr, &(in.rcpt_hw_addr), ETH_HW_ADDR_LEN); 
-  memcpy(ret.rcpt_ip_addr, &(in.rcpt_ip_addr), IP_ADDR_LEN); 
-  bzero(ret.padding, 18);
-  return ret; 
+void build_arp_packet(arp_packet_t *ret, const arp_op_t *in) {
+  ret->frame_type = htons(ARP_FRAME_TYPE);
+  ret->hw_type = htons(ETHER_HW_TYPE);
+  ret->prot_type = htons(IP_PROTO_TYPE);
+  ret->hw_addr_size = ETH_HW_ADDR_LEN;
+  ret->prot_addr_size = IP_ADDR_LEN;
+  memcpy(&(ret->targ_hw_addr), &(in->rcpt_hw_addr), ETH_HW_ADDR_LEN);
+  memcpy(&(ret->src_hw_addr), &(in->sndr_hw_addr), ETH_HW_ADDR_LEN); 
+  ret->op = in->op;
+  memcpy(ret->sndr_hw_addr, &(in->sndr_hw_addr), ETH_HW_ADDR_LEN);
+  memcpy(ret->sndr_ip_addr, &(in->sndr_ip_addr), IP_ADDR_LEN); 
+  memcpy(ret->rcpt_hw_addr, &(in->rcpt_hw_addr), ETH_HW_ADDR_LEN); 
+  memcpy(ret->rcpt_ip_addr, &(in->rcpt_ip_addr), IP_ADDR_LEN); 
+  bzero(ret->padding, 18);
 }
 
 void print_mac(struct ether_addr *mac) {
@@ -94,19 +93,37 @@ void print_arp_packet(arp_packet_t *in) {
   printf("\n\n");
 }
 
+int arp_socket_init() {
+  int sock = socket(AF_INET,SOCK_PACKET,htons(ETH_P_ARP));
+  return sock;
+}
 
+int send_arp(int sock, char *dev, arp_op_t arp_op) {
+  struct sockaddr sa;
+  arp_packet_t pkt;
+  strncpy(sa.sa_data, dev, IF_NAMESIZE - 1);
+  build_arp_packet(&pkt, &arp_op);
+  if (sendto(sock, &pkt, sizeof(pkt), 0, &sa, sizeof(sa)) < 0){
+    return 0; 
+  }
+  return 1;
+}
 
 /*
 int main(){
   arp_op_t op;
-  if (build_arp_op(&op, ARP_REQUEST, 
+  if (build_arp_op(&op, ARP_REPLY, 
       "01:02:03:04:05:06",
-      "1.2.3.4",
-      "a1:b2:c3:d4:e5:f6",
-      "101.102.103.104") != 0) {
+      "192.168.1.222",
+      "08:00:27:D0:BD:A5",
+      "192.168.1.143") != 0) {
     return 1;
   }
-  print_arp_op(op);
+  print_arp_op(&op);
+  int sock = arp_socket_init();
+  send_arp(sock, "eth0", op);
+  close(sock);
   return 0;
 }
 */
+
