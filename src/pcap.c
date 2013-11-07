@@ -61,24 +61,5 @@ void on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char * pac
     return;
   }
   print_arp_op(arp_packet_to_arp_op(*p_arp_packet));
-
-/*
-  printf("Sender MAC: ");
-  for (i = 0; i < 6; i++)
-    printf("%02X:", p_arp_packet->sndr_hw_addr[i]);
-
-  printf("\nSender IP: ");
-  for (i = 0; i < 4; i++)
-    printf("%d.", p_arp_packet->sndr_ip_addr[i]);
-
-  printf("\nTarget MAC: ");
-  for(i = 0; i < 6;i++)
-    printf("%02X:", p_arp_packet->rcpt_hw_addr[i]);
-
-  printf("\nTarget IP: ");
-  for(i = 0; i < 4; i++)
-    printf("%d.", p_arp_packet->rcpt_ip_addr[i]);
-  printf("\n\n");
-*/
 }
 
