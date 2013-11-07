@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #define MAXBYTES2CAPTURE 2048
 
-
+#include "arp.h"
 #include "pcap.h"
 #include "harp.h"
 
@@ -57,9 +57,9 @@ void on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char * pac
 
   harp_desc_t *p_harp = (harp_desc_t *) arg;
   arp_op_t op = arp_packet_to_arp_op(*p_arp_packet);
-  if (p_harp->vip != *(in_addr_t *)(p_arp_packet->rcpt_ip_addr)) {
+  if (p_harp->vip != op.rcpt_ip_addr.s_addr) {
     return;
   }
-  print_arp_op(op);
+  print_arp_op(&op);
 }
 
