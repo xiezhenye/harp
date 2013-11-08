@@ -61,3 +61,29 @@ void pcap_on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char 
   harp_on_arp_request(p_harp, &op);
 }
 
+void *pcap_thread_entry(void *arg) {
+  long ret = 0;
+  char errbuf[PCAP_ERRBUF_SIZE];
+  harp_desc_t *harp = (harp_desc_t *)arg;
+  memset(errbuf, 0, PCAP_ERRBUF_SIZE);
+  ret = listen_pcap(harp->dev, harp, errbuf, PCAP_ERRBUF_SIZE);
+  if (ret != 0) {
+    fprintf(stderr, "%s\n", errbuf);
+  }
+  return (void *)ret;
+}
+
+
+pthread_t start_pcap_thread(harp_desc_t *harp) {
+  pthread_attr_t attr;
+  if (pthread_attr_init(&attr)) {
+    fprintf(stderr, "pthread_attr_init failed\n");
+    return 0;
+  }
+  pthread_t thread_id;
+  pthread_create(&thread_id, &attr, &pcap_thread_entry, harp);
+  pthread_attr_destroy(&attr);
+  return thread_id;
+}
+
+
