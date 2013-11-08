@@ -35,7 +35,7 @@ int listen_pcap(const char *dev, const harp_desc_t *p_harp, char *errbuf, const 
     return 4;
   }
   /* main loop */
-  if (pcap_loop(descr, -1, pcap_on_packet, (u_char *)p_harp) == -1){
+  if (pcap_loop(descr, -1, pcap_on_packet, (u_char *)p_harp) == -1) {
     strncpy(errbuf, pcap_geterr(descr), bufsize);
     return 5;
   }
@@ -58,6 +58,6 @@ void pcap_on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char 
   if (p_harp->vip != op.rcpt_ip_addr.s_addr) {
     return;
   }
-  harp_on_arp_request(p_harp, op);
+  harp_on_arp_request(p_harp, &op);
 }
 

@@ -1,4 +1,5 @@
 
+ 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <net/ethernet.h>
@@ -99,15 +100,23 @@ int arp_socket_init() {
   return sock;
 }
 
-int send_arp(int sock, char *dev, arp_op_t arp_op) {
+int send_arp(int sock, char *dev, arp_op_t *arp_op) {
   struct sockaddr sa;
   arp_packet_t pkt;
   strncpy(sa.sa_data, dev, IF_NAMESIZE - 1);
-  build_arp_packet(&pkt, &arp_op);
+  build_arp_packet(&pkt, arp_op);
   if (sendto(sock, &pkt, sizeof(pkt), 0, &sa, sizeof(sa)) < 0){
     return 0; 
   }
   return 1;
+}
+
+void build_reply_arp_op(arp_op_t *ret, const arp_op_t *op, const struct ether_addr *result) {
+  ret->op = htons(ARP_REPLY);  
+  ret->sndr_hw_addr = *result;
+  ret->sndr_ip_addr = op->rcpt_ip_addr;
+  ret->rcpt_hw_addr = op->sndr_hw_addr;
+  ret->rcpt_ip_addr = op->sndr_ip_addr;
 }
 
 /*

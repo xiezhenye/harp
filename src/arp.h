@@ -47,8 +47,8 @@ int build_arp_op(arp_op_t *ret, u_short op,
 void print_arp_op(arp_op_t *in);
 void print_arp_packet(arp_packet_t *in);
 int arp_socket_init();
-int send_arp(int sock, char *dev, arp_op_t arp_op);
-
+int send_arp(int sock, char *dev, arp_op_t *arp_op);
+void build_reply_arp_op(arp_op_t *ret, const arp_op_t *op, const struct ether_addr *result);
 
 #endif
 
