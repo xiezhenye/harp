@@ -119,6 +119,15 @@ void build_reply_arp_op(arp_op_t *ret, const arp_op_t *op, const struct ether_ad
   ret->rcpt_ip_addr = op->sndr_ip_addr;
 }
 
+void build_gratuitous_arp_op(arp_op_t *ret, const struct ether_addr *mac, const struct in_addr *ip) {
+  ret->op = htons(ARP_REQUEST);
+  ret->sndr_hw_addr = *mac;
+  ret->sndr_ip_addr = *ip;
+  memset(&ret->rcpt_hw_addr, '\xff', ETH_HW_ADDR_LEN);
+  ret->rcpt_ip_addr = *ip;
+}
+
+
 /*
 int main(){
   arp_op_t op;

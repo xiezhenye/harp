@@ -17,20 +17,13 @@
 #include "harp.h"
 #include "arp.h"
 
-struct ether_addr *harp_get_vh_mac(const harp_desc_t *harp, uint32_t i) {
-  if (i >= harp->vh_count) {
-    return NULL;
-  }
-  return &(harp->vh_macs[i]);
-}
-
 int harp_init(harp_desc_t *harp, const char *dev, const char *vip, uint32_t vh_count, const char **mac_addrs) {
   struct in_addr addr;
   if (!inet_aton(vip, &addr)) {
     return 0;
   }
   strncpy(harp->dev, dev, IF_NAMESIZE - 1);
-  harp->vip = addr.s_addr;
+  harp->vip.s_addr = addr.s_addr;
   harp->vh_count = vh_count;
   harp->vh_macs = calloc(harp->vh_count, sizeof(struct ether_addr));
   harp->cur_vh = 0;
@@ -52,16 +45,35 @@ void harp_destory(harp_desc_t *harp) {
   close(harp->sock);
 }
 
+const struct ether_addr *harp_get_vh_mac(const harp_desc_t *harp, uint32_t i) {
+  if (i >= harp->vh_count) {
+    return NULL;
+  }
+  return &(harp->vh_macs[i]);
+}
+
+void harp_on_vh_change(harp_desc_t *harp) {
+  arp_op_t arp_op;
+  const struct ether_addr *mac;
+  mac  = harp_get_cur_vh_mac(harp);
+  if (mac == NULL) {
+    return;
+  }
+  build_gratuitous_arp_op(&arp_op, mac, &harp->vip);
+  send_arp(harp->sock, harp->dev, &arp_op);
+}
+
 void harp_set_cur_vh(harp_desc_t *harp, uint32_t n) {
   if (pthread_rwlock_wrlock(&(harp->lock))) {
     return;
   }
   harp->cur_vh = n;
   pthread_rwlock_unlock(&(harp->lock));
+  harp_on_vh_change(harp);
 }
 
-struct ether_addr *harp_get_cur_vh_mac(harp_desc_t *harp) {
-  struct ether_addr *ret;
+const struct ether_addr *harp_get_cur_vh_mac(harp_desc_t *harp) {
+  const struct ether_addr *ret;
   if (pthread_rwlock_rdlock(&(harp->lock))) {
     return NULL;
   }

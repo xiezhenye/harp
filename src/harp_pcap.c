@@ -55,7 +55,7 @@ void pcap_on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char 
   }
   harp_desc_t *p_harp = (harp_desc_t *) arg;
   arp_op_t op = arp_packet_to_arp_op(*p_arp_packet);
-  if (p_harp->vip != op.rcpt_ip_addr.s_addr) {
+  if (p_harp->vip.s_addr != op.rcpt_ip_addr.s_addr) {
     return;
   }
   harp_on_arp_request(p_harp, &op);

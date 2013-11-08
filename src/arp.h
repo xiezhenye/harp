@@ -49,6 +49,6 @@ void print_arp_packet(arp_packet_t *in);
 int arp_socket_init();
 int send_arp(int sock, char *dev, arp_op_t *arp_op);
 void build_reply_arp_op(arp_op_t *ret, const arp_op_t *op, const struct ether_addr *result);
-
+void build_gratuitous_arp_op(arp_op_t *ret, const struct ether_addr *mac, const struct in_addr *ip); 
 #endif
 
