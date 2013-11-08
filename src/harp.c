@@ -27,6 +27,7 @@ int harp_init(harp_desc_t *harp, const char *dev, const char *vip, uint32_t vh_c
   harp->vh_count = vh_count;
   harp->vh_macs = calloc(harp->vh_count, sizeof(struct ether_addr));
   harp->cur_vh = 0;
+  harp->pcap_descr = NULL;
   /* mac addrs */
   int i;
   for (i = 0; i < vh_count; i++) {

@@ -8,16 +8,20 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include <net/if.h>
-#include "arp.h"
+#include <pcap.h>
 
+#include "arp.h"
+ 
 typedef struct harp_desc {
   char               dev[IF_NAMESIZE];
   struct in_addr     vip;
-  struct ether_addr  *vh_macs;
+  struct ether_addr *vh_macs;
 /*  uint32_t           *vh_weights; */
   uint32_t           vh_count;
   uint32_t           cur_vh;
   int                sock;
+  pcap_t            *pcap_descr;
+  pthread_t          thread_id;
   pthread_rwlock_t   lock;
 } harp_desc_t;
 

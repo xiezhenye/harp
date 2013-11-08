@@ -1,11 +1,10 @@
 #ifndef HARP_PCAP_H_INCLUDED
 #define HARP_PCAP_H_INCLUDED
 
-#include <pcap.h>
 #include "arp.h"
 #include "harp.h"
 
-int listen_pcap(const char *dev, const harp_desc_t *p_harp, char *errbuf, const size_t bufsize);
-pthread_t start_pcap_thread(harp_desc_t *harp);
-
+int start_pcap_thread(harp_desc_t *harp);
+int stop_pcap_thread(harp_desc_t *harp);
 #endif
+

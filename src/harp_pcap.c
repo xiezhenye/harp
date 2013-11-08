@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-
+#include <pcap.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -10,18 +10,19 @@
 #include "harp_pcap.h"
 #include "harp.h"
 
+int listen_pcap(harp_desc_t *p_harp, char *errbuf, const size_t bufsize);
 void pcap_on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char * packet);
 
-int listen_pcap(const char *dev, const harp_desc_t *p_harp, char *errbuf, const size_t bufsize) {
+int listen_pcap(harp_desc_t *p_harp, char *errbuf, const size_t bufsize) {
   bpf_u_int32 netaddr = 0, mask = 0;
   struct bpf_program filter;
   pcap_t *descr = NULL;
-  descr = pcap_open_live(dev, MAXBYTES2CAPTURE, 0, 512, errbuf);
+  descr = pcap_open_live(p_harp->dev, MAXBYTES2CAPTURE, 0, 512, errbuf);
   if (descr == NULL){
     return 1;
   }
 
-  if (pcap_lookupnet(dev, &netaddr, &mask, errbuf) == -1){
+  if (pcap_lookupnet(p_harp->dev, &netaddr, &mask, errbuf) == -1){
     return 2;
   }
 
@@ -35,6 +36,7 @@ int listen_pcap(const char *dev, const harp_desc_t *p_harp, char *errbuf, const 
     return 4;
   }
   /* main loop */
+  p_harp->pcap_descr = descr;
   if (pcap_loop(descr, -1, pcap_on_packet, (u_char *)p_harp) == -1) {
     strncpy(errbuf, pcap_geterr(descr), bufsize);
     return 5;
@@ -66,7 +68,7 @@ void *pcap_thread_entry(void *arg) {
   char errbuf[PCAP_ERRBUF_SIZE];
   harp_desc_t *harp = (harp_desc_t *)arg;
   memset(errbuf, 0, PCAP_ERRBUF_SIZE);
-  ret = listen_pcap(harp->dev, harp, errbuf, PCAP_ERRBUF_SIZE);
+  ret = listen_pcap(harp, errbuf, PCAP_ERRBUF_SIZE);
   if (ret != 0) {
     fprintf(stderr, "%s\n", errbuf);
   }
@@ -74,16 +76,29 @@ void *pcap_thread_entry(void *arg) {
 }
 
 
-pthread_t start_pcap_thread(harp_desc_t *harp) {
+int start_pcap_thread(harp_desc_t *harp) {
   pthread_attr_t attr;
   if (pthread_attr_init(&attr)) {
-    fprintf(stderr, "pthread_attr_init failed\n");
     return 0;
   }
   pthread_t thread_id;
-  pthread_create(&thread_id, &attr, &pcap_thread_entry, harp);
+  if (pthread_create(&thread_id, &attr, &pcap_thread_entry, harp)) {
+    return 0;
+  }
   pthread_attr_destroy(&attr);
-  return thread_id;
+  harp->thread_id = thread_id;
+  return 1;
 }
 
+int stop_pcap_thread(harp_desc_t *harp) {
+  long ret;
+  if (harp->pcap_descr != NULL) {
+    pcap_breakloop(harp->pcap_descr);
+  }
+  if (harp->thread_id != 0){
+    pthread_join(harp->thread_id, (void**)&ret);
+  }
+  harp->thread_id = 0;
+  return ret;
+}
 
