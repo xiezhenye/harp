@@ -1,11 +1,11 @@
-harp
+HARP
 ====
 
-Reliable active - standby HA utilities.
+An HA utility to drift VIP amount active and standby hosts.
 
+The triditional way to drift VIP is to release the VIP on the old host and then bind it to the new host. It will meet with IP conflict when the first step failed and the second step succeed. Many machinism and tools like watchdog in heartbeat are used to avoid this problem and introduced a lot of complexitis.
 
-
-
+HARP uses a different way to drift VIP. VIP is not binded on the ethernet interfaces on any host but just binded on the lo device and set the kernel not to reply arp request not belong the origin interface. Thus, neither the active and the standby hosts can reply arp request directly. The machine address of the active host will be replied by HARP instead. There is no chance that IP conflict happens. Additionly, unlike using proxy to handle HA, no net flow is through HARP so it will not become bottlehold.
 
 Usage 
 -----
@@ -28,4 +28,4 @@ The first mac address is mac 0, the second is mac 1 and so on. The default backe
 Limitition
 ---------- 
 
-harp CAN NOT runs on the frontend client machines. Because the machines can't receive arp packets sent from the same interface.
+harp CAN NOT runs on the frontend client machines. Because the arp packets sent by harp can not be received in the same interface of the same host.
