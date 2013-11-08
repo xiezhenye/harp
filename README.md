@@ -25,3 +25,7 @@ e.g.
 The first mac address is mac 0, the second is mac 1 and so on. The default backend is mac 0. Input mac number in stdin per line to switch amount backends.
 
 
+Limitition
+---------- 
+
+harp CAN NOT runs on the frontend client machines. Because the machines can't receive arp packets sent from the same interface.
