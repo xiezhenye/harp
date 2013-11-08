@@ -65,12 +65,10 @@ struct ether_addr *harp_get_cur_vh_mac(harp_desc_t *harp) {
 }
 
 int harp_on_arp_request(harp_desc_t *harp, const arp_op_t *op) {
-  print_arp_op(op);
   struct ether_addr mac;
   arp_op_t rpl;
   mac = *harp_get_cur_vh_mac(harp);
   build_reply_arp_op(&rpl, op, &mac); 
-  print_arp_op(&rpl);
   send_arp(harp->sock, harp->dev, &rpl);
   return 0;
 }
