@@ -7,13 +7,14 @@
 #include <string.h>
 
 
+#include <net/ethernet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
 #define MAXBYTES2CAPTURE 2048
 
-#include "pcap.h"
+#include "harp_pcap.h"
 #include "harp.h"
 
 struct ether_addr *harp_select_vh(const harp_desc_t *harp, uint32_t i) {
@@ -45,25 +46,8 @@ void harp_free(harp_desc_t *harp) {
   free(harp->vh_macs);
 }
 
-int main(int argc, char *argv[]){
-  if (argc < 4){
-    printf("USAGE: harpd dev vip mac [mac ...]\n");
-    return 1; 
-  }
-  int ret;
-  harp_desc_t harp;
-  if (!harp_init(&harp, argv[1], argv[2], argc - 3, (const char**)&argv[3])){
-    fprintf(stderr, "invalid arg\n");
-    return 2;
-  }
-  char errbuf[PCAP_ERRBUF_SIZE];
-  memset(errbuf, 0, PCAP_ERRBUF_SIZE);
-  ret = listen_pcap(argv[1], &harp, errbuf, PCAP_ERRBUF_SIZE);
-  if (ret != 0) {
-    fprintf(stderr, "ERR: %s\n", errbuf);
-  }
-  return ret;
+int harp_on_arp_request(harp_desc_t *harp, arp_op_t op) {
+  return 0;
 }
-
 
 /* EOF */

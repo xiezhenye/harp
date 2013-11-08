@@ -5,7 +5,9 @@
 #include <net/ethernet.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
+#include "arp.h"
 
 typedef struct harp_desc {
   in_addr_t          vip;
@@ -17,5 +19,8 @@ typedef struct harp_desc {
 struct ether_addr *harp_select_vh(const harp_desc_t *harp, uint32_t i); 
 int harp_init(harp_desc_t *harp, const char *dev, const char *vip, uint32_t vh_count, const char **mac_addrs);
 void harp_free(harp_desc_t *harp);
+
+int harp_on_arp_request(harp_desc_t *harp, arp_op_t op);
+
 #endif
 

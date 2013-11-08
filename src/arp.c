@@ -1,6 +1,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <net/ethernet.h>
 #include <string.h>
 #include <stdio.h>
 #include <net/if.h>
