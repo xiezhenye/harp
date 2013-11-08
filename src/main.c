@@ -14,12 +14,14 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "invalid arg\n");
     return 2;
   }
+
   char errbuf[PCAP_ERRBUF_SIZE];
   memset(errbuf, 0, PCAP_ERRBUF_SIZE);
   ret = listen_pcap(argv[1], &harp, errbuf, PCAP_ERRBUF_SIZE);
   if (ret != 0) {
     fprintf(stderr, "ERR: %s\n", errbuf);
   }
+  harp_destory(&harp);
   return ret;
 }
 
