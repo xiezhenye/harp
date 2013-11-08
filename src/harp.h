@@ -26,6 +26,6 @@ int harp_init(harp_desc_t *harp, const char *dev, const char *vip, uint32_t vh_c
 void harp_destory(harp_desc_t *harp);
 
 int harp_on_arp_request(harp_desc_t *harp, const arp_op_t *op);
-
+void harp_set_cur_vh(harp_desc_t *harp, uint32_t n);
 #endif
 

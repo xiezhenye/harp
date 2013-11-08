@@ -52,6 +52,14 @@ void harp_destory(harp_desc_t *harp) {
   close(harp->sock);
 }
 
+void harp_set_cur_vh(harp_desc_t *harp, uint32_t n) {
+  if (pthread_rwlock_wrlock(&(harp->lock))) {
+    return;
+  }
+  harp->cur_vh = n;
+  pthread_rwlock_unlock(&(harp->lock));
+}
+
 struct ether_addr *harp_get_cur_vh_mac(harp_desc_t *harp) {
   struct ether_addr *ret;
   if (pthread_rwlock_rdlock(&(harp->lock))) {

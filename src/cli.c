@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <pthread.h>
 
 #include "harp.h"
 #include "cli.h"
@@ -10,11 +9,7 @@ void start_cli(harp_desc_t *harp) {
     if (n >= harp->vh_count) {
       continue;
     }
-    if (pthread_rwlock_wrlock(&(harp->lock))) {
-      continue;
-    }
-    harp->cur_vh = n;
-    pthread_rwlock_unlock(&(harp->lock));
+    harp_set_cur_vh(harp, n);
   }
 }
 
