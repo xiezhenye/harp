@@ -21,7 +21,7 @@ typedef struct harp_desc {
   uint32_t           cur_vh;
   int                sock;
   pcap_t            *pcap_descr;
-  pthread_t          thread_id;
+  pthread_t          pcap_tid;
   pthread_rwlock_t   lock;
 } harp_desc_t;
 

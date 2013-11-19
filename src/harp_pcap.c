@@ -86,7 +86,7 @@ int start_pcap_thread(harp_desc_t *harp) {
     return 0;
   }
   pthread_attr_destroy(&attr);
-  harp->thread_id = thread_id;
+  harp->pcap_tid = thread_id;
   return 1;
 }
 
@@ -95,10 +95,10 @@ int stop_pcap_thread(harp_desc_t *harp) {
   if (harp->pcap_descr != NULL) {
     pcap_breakloop(harp->pcap_descr);
   }
-  if (harp->thread_id != 0){
-    pthread_join(harp->thread_id, (void**)&ret);
+  if (harp->pcap_tid != 0){
+    pthread_join(harp->pcap_tid, (void**)&ret);
   }
-  harp->thread_id = 0;
+  harp->pcap_tid = 0;
   return ret;
 }
 
