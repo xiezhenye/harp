@@ -127,6 +127,13 @@ void build_gratuitous_arp_op(arp_op_t *ret, const struct ether_addr *mac, const 
   ret->rcpt_ip_addr = *ip;
 }
 
+int ip_cmp(const struct in_addr *a, const struct in_addr *b) {
+  return memcmp(a, b, sizeof(struct in_addr));
+}
+
+int mac_cmp(const struct ether_addr *a, const struct ether_addr *b) {
+  return memcmp(a, b, sizeof(struct ether_addr));
+}
 
 /*
 int main(){
