@@ -44,8 +44,10 @@ void build_arp_packet(arp_packet_t *ret, const arp_op_t *in);
 int build_arp_op(arp_op_t *ret, u_short op, 
   const char *sndr_hw_addr, const char *sndr_ip_addr, 
   const char *rcpt_hw_addr, const char *rcpt_ip_addr);
-void print_arp_op(arp_op_t *in);
-void print_arp_packet(arp_packet_t *in);
+void print_mac(const struct ether_addr *mac);
+void print_ip(const struct in_addr *ip);
+void print_arp_op(const arp_op_t *in);
+void print_arp_packet(const arp_packet_t *in);
 int arp_socket_init();
 int send_arp(int sock, char *dev, arp_op_t *arp_op);
 void build_reply_arp_op(arp_op_t *ret, const arp_op_t *op, const struct ether_addr *result);

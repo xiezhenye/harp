@@ -54,19 +54,19 @@ void build_arp_packet(arp_packet_t *ret, const arp_op_t *in) {
   bzero(ret->padding, 18);
 }
 
-void print_mac(struct ether_addr *mac) {
+void print_mac(const struct ether_addr *mac) {
   char *t = (char *)(mac);
   printf("%02hhX:%02hhX:%02hhX:%02hhX:%02hhX:%02hhX",
     t[0],t[1],t[2],t[3],t[4],t[5]);
 }
 
-void print_ip(struct in_addr *ip) {
+void print_ip(const struct in_addr *ip) {
   unsigned char *t = (unsigned char *)(ip);
   printf("%d.%d.%d.%d", 
     t[0],t[1],t[2],t[3]);
 }
 
-void print_arp_op(arp_op_t *in) {
+void print_arp_op(const arp_op_t *in) {
   print_mac(&in->sndr_hw_addr);
   printf(" ");
   print_ip(&in->sndr_ip_addr);
@@ -77,7 +77,7 @@ void print_arp_op(arp_op_t *in) {
   printf("\n");
 }
 
-void print_arp_packet(arp_packet_t *in) {
+void print_arp_packet(const arp_packet_t *in) {
   print_mac((struct ether_addr *)in->targ_hw_addr);
   printf("\n");
   print_mac((struct ether_addr *)in->src_hw_addr);
