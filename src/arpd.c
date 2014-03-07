@@ -5,9 +5,13 @@
 
 
 
-int main() {
+int main(int argn, char **argc) {
   int sock = arp_socket_init();
-  arp_listener_t listener = arp_create_listener(sock);
+  if (argn < 2) {
+    return 1;
+  }
+  char *dev = argc[1];
+  arp_listener_t listener = arp_create_listener(sock, dev);
   arp_thread_t thread = arp_create_thread(&listener, &print_arp_op);
   arp_run_thread(&thread);
   char buf[100];
@@ -19,7 +23,7 @@ int main() {
         printf("parse err: %d\n", result);
         continue;
       }
-      send_arp(sock, "eth0", &arp_op); 
+      send_arp(sock, dev, &arp_op);
     }
   }
   arp_stop_thread(&thread);

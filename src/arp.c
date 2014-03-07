@@ -8,6 +8,8 @@
 #include <errno.h>
 #include <pthread.h>
 
+int sock_bind_dev(int sock, const char *dev);
+
 arp_op_t arp_packet_to_arp_op(arp_packet_t in) {
   arp_op_t ret;
   ret.op = in.op;
@@ -99,9 +101,9 @@ int arp_socket_init() {
   return sock;
 }
 
-int send_arp(int sock, char *dev, arp_op_t *arp_op) {
-  struct sockaddr sa;
+int send_arp(int sock, const char *dev, const arp_op_t *arp_op) {
   arp_packet_t pkt;
+  struct sockaddr sa;
   strncpy(sa.sa_data, dev, IF_NAMESIZE - 1);
   build_arp_packet(&pkt, arp_op);
   if (sendto(sock, &pkt, sizeof(pkt), 0, &sa, sizeof(sa)) < 0){
@@ -134,21 +136,22 @@ int mac_cmp(const struct ether_addr *a, const struct ether_addr *b) {
   return memcmp(a, b, sizeof(struct ether_addr));
 }
 
-arp_listener_t arp_create_listener(int sock) {
+arp_listener_t arp_create_listener(int sock, const char *dev) {
   arp_listener_t ret;
   ret.sock = sock;
   ret.running = 1;
   ret.tv.tv_sec = 1;
   ret.tv.tv_usec = 0;
+  ret.dev = dev;
   return ret;
 }
 
-int arp_start_listener(arp_listener_t *listener, arp_callback_t callback) {
+int arp_start_listener(const arp_listener_t *listener, arp_callback_t callback) {
   int sock = listener->sock;
   char buf[ETH_FRAME_LEN];
   setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
     (char *)&(listener->tv), sizeof(struct timeval));
-  
+  sock_bind_dev(sock, listener->dev);
   while (listener->running) {
     ssize_t size = recv(sock, buf, ETH_FRAME_LEN, 0);
     arp_packet_t *packet;
@@ -171,7 +174,7 @@ void arp_stop_listener(arp_listener_t *listener) {
   listener->running = 0;
 }
 
-int sock_bind_dev(int sock, char *dev) {
+int sock_bind_dev(int sock, const char *dev) {
   return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev, strlen(dev));
 }
 

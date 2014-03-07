@@ -42,6 +42,7 @@ typedef struct arp_op {
 typedef struct arp_listener {
   int sock;
   int running;
+  const char *dev;
   struct timeval tv;
 } arp_listener_t;
 
@@ -73,13 +74,13 @@ void print_arp_packet(const arp_packet_t *in);
 
 int arp_socket_init();
 
-arp_listener_t arp_create_listener(int sock);
+arp_listener_t arp_create_listener(int sock, const char *dev);
 
-int arp_start_listener(arp_listener_t *listener, arp_callback_t callback);
+int arp_start_listener(const arp_listener_t *listener, arp_callback_t callback);
 
 void arp_stop_listener(arp_listener_t *listener);
 
-int send_arp(int sock, char *dev, arp_op_t *arp_op);
+int send_arp(int sock, const char *dev, const arp_op_t *arp_op);
 
 void build_reply_arp_op(arp_op_t *ret, const arp_op_t *op, const struct ether_addr *result);
 
