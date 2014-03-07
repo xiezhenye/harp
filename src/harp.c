@@ -27,6 +27,7 @@ int harp_init(harp_desc_t *harp, const char *dev, const char *vip, uint32_t vh_c
   harp->vh_count = vh_count;
   harp->vh_macs = calloc(harp->vh_count, sizeof(struct ether_addr));
   harp->cur_vh = 0;
+  harp->last_reply_time = 0;
   harp->pcap_descr = NULL;
   /* mac addrs */
   int i;
@@ -37,6 +38,7 @@ int harp_init(harp_desc_t *harp, const char *dev, const char *vip, uint32_t vh_c
   }
   pthread_rwlock_init(&(harp->lock), NULL);
   harp->sock = arp_socket_init(); 
+  harp->enabled = 1;
   return 1;
 }
 
@@ -88,9 +90,17 @@ const struct ether_addr *harp_get_cur_vh_mac(harp_desc_t *harp) {
 int harp_on_arp_request(harp_desc_t *harp, const arp_op_t *op) {
   struct ether_addr mac;
   arp_op_t rpl;
+  if (harp->vip.s_addr != op->rcpt_ip_addr.s_addr) {
+    return 0;
+  }
   mac = *harp_get_cur_vh_mac(harp);
   build_reply_arp_op(&rpl, op, &mac); 
   send_arp(harp->sock, harp->dev, &rpl);
+  return 0;
+}
+
+int harp_on_arp_reply(harp_desc_t *harp, const arp_op_t *op) {
+  print_arp_op(op);
   return 0;
 }
 

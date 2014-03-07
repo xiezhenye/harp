@@ -1,13 +1,12 @@
-
- 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <net/ethernet.h>
 #include <string.h>
 #include <stdio.h>
 #include <net/if.h>
-
 #include "arp.h"
+#include <errno.h>
+#include <pthread.h>
 
 arp_op_t arp_packet_to_arp_op(arp_packet_t in) {
   arp_op_t ret;
@@ -135,21 +134,129 @@ int mac_cmp(const struct ether_addr *a, const struct ether_addr *b) {
   return memcmp(a, b, sizeof(struct ether_addr));
 }
 
-/*
-int main(){
-  arp_op_t op;
-  if (build_arp_op(&op, ARP_REPLY, 
-      "01:02:03:04:05:06",
-      "192.168.1.222",
-      "08:00:27:D0:BD:A5",
-      "192.168.1.143") != 0) {
-    return 1;
+arp_listener_t arp_create_listener(int sock) {
+  arp_listener_t ret;
+  ret.sock = sock;
+  ret.running = 1;
+  ret.tv.tv_sec = 1;
+  ret.tv.tv_usec = 0;
+  return ret;
+}
+
+int arp_start_listener(arp_listener_t *listener, arp_callback_t callback) {
+  int sock = listener->sock;
+  char buf[ETH_FRAME_LEN];
+  setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+    (char *)&(listener->tv), sizeof(struct timeval));
+  
+  while (listener->running) {
+    ssize_t size = recv(sock, buf, ETH_FRAME_LEN, 0);
+    arp_packet_t *packet;
+    if (size <= 0) {
+      if (errno == EAGAIN) {
+        continue;
+      } else {
+        printf("ERR: %d %s\n", errno, strerror(errno));
+        return errno;
+      }
+    }
+    packet = (arp_packet_t *)buf;
+    arp_op_t arp = arp_packet_to_arp_op(*packet);
+    callback(&arp);
   }
-  print_arp_op(&op);
-  int sock = arp_socket_init();
-  send_arp(sock, "eth0", op);
-  close(sock);
   return 0;
 }
+
+void arp_stop_listener(arp_listener_t *listener) {
+  listener->running = 0;
+}
+
+int sock_bind_dev(int sock, char *dev) {
+  return setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, dev, strlen(dev));
+}
+
+void *arp_thread_entry(void *arg) {
+  arp_thread_t *t = (arp_thread_t *) arg; 
+  arp_start_listener(t->listener, t->callback);
+  return NULL;
+}
+
+arp_thread_t arp_create_thread(arp_listener_t *listener, arp_callback_t callback) {
+  arp_thread_t ret;
+  ret.listener = listener;
+  ret.callback = callback;
+  ret.tid = 0;
+  return ret;
+}
+
+void arp_run_thread(arp_thread_t *thread) {
+  pthread_attr_t attr;
+  if (pthread_attr_init(&attr)) {
+    return;
+  }
+  if (pthread_create(&(thread->tid), &attr, &arp_thread_entry, thread)) {
+    return;
+  }
+  pthread_attr_destroy(&attr);
+}
+
+void arp_stop_thread(arp_thread_t *thread) {
+  long ret;
+  if (thread->listener != NULL) {
+    arp_stop_listener(thread->listener);
+  }
+  if (thread->tid != 0) {
+    pthread_join(thread->tid, (void **)&ret);
+  }
+  thread->tid = 0;
+}
+
+
+/*
+98:0C:82:EA:6C:0A 192.168.1.164 rqst 00:00:00:00:00:00 192.168.1.134
+A8:26:D9:BC:9F:13 192.168.1.102 rply FF:FF:FF:FF:FF:FF 192.168.1.1
 */
+int parse_arp_op_str(arp_op_t *ret, const char *line) {
+  /* 21 * 2 + 15 * 2 + 4 + 5; */
+  #define MAX_LINE_LENGTH 81
+  char seg[MAX_LINE_LENGTH];
+  char *t;
+  strncpy(seg, line, MAX_LINE_LENGTH);
+  seg[MAX_LINE_LENGTH - 1] = '\0';
+  char *mac_from = strtok_r(seg, " ", &t);
+  if (mac_from == NULL) {
+    return 1;
+  }
+  char *ip_from = strtok_r(NULL, " ", &t);
+  if (ip_from == NULL) {
+    return 2;
+  }
+  char *s_op = strtok_r(NULL, " ", &t); 
+  if (s_op == NULL) {
+    return 3;
+  }
+  u_short op;
+  if (strcmp(s_op, "rply") == 0) {
+    op = ARP_REPLY;
+  } else if (strcmp(s_op, "rqst") == 0) {
+    op = ARP_REQUEST;
+  } else {
+    return 3;
+  }
+  char *mac_to = strtok_r(NULL, " ", &t);
+  if (mac_to == NULL) {
+    return 4;
+  }
+  char *ip_to = strtok_r(NULL, " ", &t);
+  if (ip_to == NULL) {
+    return 5;
+  }
+  int result;
+  result = build_arp_op(ret, op, mac_from, ip_from, mac_to, ip_to);
+  if (result != 0) {
+    return result + 10;
+  }
+  return 0;
+}
+
 

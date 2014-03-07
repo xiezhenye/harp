@@ -52,15 +52,14 @@ void pcap_on_packet(u_char *arg, const struct pcap_pkthdr* pkthdr, const u_char 
   if (ntohs(p_arp_packet->hw_type) != ETHER_HW_TYPE || ntohs(p_arp_packet->prot_type) != IP_PROTO_TYPE){
     return;
   }
-  if (ntohs(p_arp_packet->op) != ARP_REQUEST) {
-    return;
-  }
-  harp_desc_t *p_harp = (harp_desc_t *) arg;
   arp_op_t op = arp_packet_to_arp_op(*p_arp_packet);
-  if (p_harp->vip.s_addr != op.rcpt_ip_addr.s_addr) {
-    return;
+  harp_desc_t *harp = (harp_desc_t *) arg;
+  if (ntohs(op.op) == ARP_REQUEST) {
+    harp_on_arp_request(harp, &op);
   }
-  harp_on_arp_request(p_harp, &op);
+  if (ntohs(p_arp_packet->op) == ARP_REPLY) {
+    harp_on_arp_reply(harp, &op); 
+  }
 }
 
 void *pcap_thread_entry(void *arg) {

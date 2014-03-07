@@ -5,6 +5,7 @@
 #include "harp.h"
 #include "harp_pcap.h"
 #include "cli.h"
+#include "ping.h"
 
 int main(int argc, char *argv[]){
   if (argc < 4){
