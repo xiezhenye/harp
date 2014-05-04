@@ -1,8 +1,8 @@
-
+GOENV=GOPATH=$(CURDIR) GOBIN=$(CURDIR)/bin
 arpd:
-	GOPATH=$(CURDIR) GOBIN=$(CURDIR)/bin go install src/main/arpd.go
+	$(GOENV) go install src/main/arpd.go
 
 harpd:
-	GOPATH=$(CURDIR) GOBIN=$(CURDIR)/bin go install src/main/harpd.go
+	$(GOENV) go install src/main/harpd.go
 
 

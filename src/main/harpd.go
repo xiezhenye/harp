@@ -2,29 +2,43 @@ package main
 
 import (
   "harp"
+  "encoding/json"
+  "flag"
+  "io/ioutil"
 )
 
 
+func parseFlags(confPath *string) {
+  flag.StringVar(confPath, "conf", "", "path to the config file")
+  flag.Parse()
+}
+
+func fillConfFromFile(conf *harp.HarpConfig, path string) (err error) {
+  var buf []byte
+  buf, err = ioutil.ReadFile(path)
+  if err != nil {
+    return
+  }
+  err = json.Unmarshal(buf, conf)
+  if err != nil {
+    return
+  }
+  return nil
+}
+
+
 func main() {
-  
-  server, err := harp.FromConfig(&harp.HarpConfig{
-    Clusters: []harp.ClusterConfig{
-      {
-        IP: "192.168.56.200",
-        Dev: "eth1",
-        Nodes: []harp.NodeConfig{
-          {
-            HwAddr: "f0:f1:f2:f3:f4:f5", 
-          },
-        },
-      },
-    },
-  })
+  var confPath string
+  parseFlags(&confPath)
+  var conf harp.HarpConfig
+  err := fillConfFromFile(&conf, confPath)
+  if err != nil {
+    return
+  }
+  server, err := harp.FromConfig(&conf)
   if err != nil {
     return
   }
   server.Start()
 }
-
-
 
