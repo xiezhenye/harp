@@ -18,7 +18,7 @@ func NewConfig(desc string) (ret Config, err error) {
         err = fmt.Errorf("bad descriptor format")
         return
     }
-    class:= secs[1]
+    class:= secs[0]
     switch class {
     case "file":
         ret, err = NewFileConfig(secs[1])

@@ -1,4 +1,4 @@
-GOENV=GOPATH=$(CURDIR) GOBIN=$(CURDIR)/bin GOROOT=/opt/go
+GOENV=GOPATH=$(CURDIR) GOBIN=$(CURDIR)/bin
 arpd:
 	$(GOENV) go install src/main/arpd.go
 
