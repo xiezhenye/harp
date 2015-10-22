@@ -131,6 +131,7 @@ func (self *ArpListener) Listen(reciever ArpReciever) {
   for { 
     _, from, err := syscall.Recvfrom(self.sock, buf, 0)
     if err != nil {
+      //TODO: is recoverable?
       return
     }
     //fmt.Println("in:")
