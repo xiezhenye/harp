@@ -84,7 +84,7 @@ func (self *EtcdConfig) keepalive() {
         //TODO: unknown error!
         fmt.Println(err)
       }
-      time.Sleep(heartbeatInterval)
+      time.Sleep(heartbeatInterval * time.Second)
     }
  }
 
@@ -103,6 +103,12 @@ func (self *EtcdConfig) IsActive() (b bool) {
 
 func (self *EtcdConfig) watchForUpdate() {
   //fetch
+  resp, err := self.kapi.Get(context.Background(), self.prefix+dataKey, nil)
+  if err != nil {
+    // exit
+    return
+  }
+  fmt.Println(resp)
   // watch data, update cache
 }
 
