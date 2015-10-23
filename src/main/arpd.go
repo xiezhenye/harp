@@ -18,13 +18,13 @@ func parseFlags(conf *string, dev *string) {
 
 func main() {
   var confDesc, devName string
-  parseFlags(&confDesc)
-  conf, err := config.NewConfig(confDesc, devName)
+  parseFlags(&confDesc, &devName)
+  conf, err := config.NewConfig(confDesc)
   if err != nil {
     fmt.Println(err)
     return
   }
-  dev, err = net.InterfaceByName(devName)
+  dev, err := net.InterfaceByName(devName)
   listener, err := arp.NewListener()
   if err != nil {
     fmt.Println(err)
@@ -36,12 +36,12 @@ func main() {
     if mac == "" {
       return
     }
-    ipAddr:= net.PasreIP(ip)
-    hwAddr, err:= net.ParseMac(mac)
+    ipAddr:= net.ParseIP(ip)
+    hwAddr, err:= net.ParseMAC(mac)
     if err != nil {
       return
     }
-    self.listener.Send(arp.GratuitousArpOp(ipAddr, hwAddr), arp.AddrFromInterface(dev))
+    listener.Send(arp.GratuitousArpOp(ipAddr, hwAddr), arp.AddrFromInterface(dev))
   })
   listener.Listen(func(op arp.ArpOp, addr arp.Addr){
     if op.Op != arp.ARP_REQUEST {

@@ -28,7 +28,7 @@ type EtcdConfig struct {
     lock      sync.RWMutex
 }
 
-func NewEtcdConfig(nodeId string, endpoints []string, prefix string, callback OnChangeCallback) (ret *EtcdConfig, err error) {
+func NewEtcdConfig(nodeId string, endpoints []string, prefix string) (ret *EtcdConfig, err error) {
     ret = new(EtcdConfig)
     ret.endpoints = endpoints
     ret.prefix = prefix
@@ -63,8 +63,9 @@ func (self *EtcdConfig) GetMacByIp(ip string) string {
     return mac
 }
 
-func (self *FileConfig) SetOnChange(callback OnChangeCallback) {
-    ret.callback = callback
+func (self *EtcdConfig) SetOnChange(callback OnChangeCallback) {
+    self.callback = callback
+    return
 }
 
 func (self *EtcdConfig) keepalive() {
