@@ -142,7 +142,7 @@ func (self *EtcdConfig) watchForUpdate() {
     case "delete":
       delete(self.cache, key)
     }
-    fmt.Printf("%v -> %v\n", key, balue)
+    fmt.Printf("%v -> %v\n", key, value)
     if self.callback != nil {
         self.callback(key, value)
     }
