@@ -4,6 +4,9 @@ import (
 "encoding/json"
 "io/ioutil"
 "sync"
+"os"
+"os/signal"
+"syscall"
 )
 
 type FileConfig struct {
@@ -35,6 +38,7 @@ func NewFileConfig(path string) (ret *FileConfig, err error) {
     ret = new(FileConfig)
     ret.path = path
     err = ret.Reload()
+    go ret.SignalHandler()
     return
 }
 
@@ -48,3 +52,15 @@ func (self *FileConfig) Reload() (err error) {
     err = json.Unmarshal(content, &self.data)
     return
 }
+
+
+func (self *FileConfig) SignalHandler() {
+  c := make(chan os.Signal, 1)
+  signal.Notify(c, syscall.SIGUSR2)
+  for {
+    // Block until a signal is received.
+    <-c
+    self.Reload() 
+  }
+}
+
