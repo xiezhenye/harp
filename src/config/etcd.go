@@ -5,6 +5,7 @@ import (
 "github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context"
 "github.com/coreos/etcd/client"
 "sync"
+"strings"
 "fmt"
 )
 
@@ -41,6 +42,7 @@ func NewEtcdConfig(nodeId string, endpoints []string, prefix string) (ret *EtcdC
     if err != nil {
         return
     }
+    ret.cache = make(map[string]string)
     ret.kapi = client.NewKeysAPI(ret.client)
     go ret.keepalive()
     go ret.watchForUpdate()
@@ -103,12 +105,39 @@ func (self *EtcdConfig) IsActive() (b bool) {
 
 func (self *EtcdConfig) watchForUpdate() {
   //fetch
-  resp, err := self.kapi.Get(context.Background(), self.prefix+dataKey, nil)
+  resp, err := self.kapi.Get(context.Background(), self.prefix+dataKey, &client.GetOptions{Recursive:true})
   if err != nil {
     // exit
     return
   }
-  fmt.Println(resp)
-  // watch data, update cache
+  lastIndex := resp.Index
+  if resp.Node.Nodes != nil && len(resp.Node.Nodes) > 0 {
+    for _, node:= range resp.Node.Nodes {
+      key:= node.Key[strings.LastIndex(node.Key, "/")+1:]
+      self.cache[key] = node.Value
+      fmt.Printf("%v -> %v\n", key, node.Value)
+    }
+  }
+  for {
+    //fmt.Println(lastIndex)
+    resp, err = self.kapi.Watcher(self.prefix+dataKey, &client.WatcherOptions{
+      Recursive:true, AfterIndex:lastIndex,
+    }).Next(context.Background())
+    if resp.Index == lastIndex {
+      continue
+    }
+    lastIndex = resp.Index
+    node:= resp.Node
+    key:= node.Key[strings.LastIndex(node.Key, "/")+1:]
+    switch resp.Action {
+    case "set":
+      self.cache[key] = node.Value
+      fmt.Printf("%v -> %v\n", key, node.Value)
+    case "delete":
+      delete(self.cache, key)
+      fmt.Printf("%v -> %v\n", key, nil)
+    }
+  }  
+// watch data, update cache
 }
 
