@@ -23,7 +23,7 @@ func NewConfig(desc string) (ret Config, err error) {
     case "file":
         ret, err = NewFileConfig(secs[1])
     case "etcd":
-        secs = strings.SplitN(secs[1], "/", 2)
+        secs = strings.SplitN(secs[1], "@", 2)
         if len(secs) != 2 {
             err = fmt.Errorf("bad descriptor format")
             return
@@ -36,9 +36,13 @@ func NewConfig(desc string) (ret Config, err error) {
         }
         prefix:= secs[1]
         endpoints:= strings.Split(secs[0], ",")
+        for i := range endpoints {
+          endpoints[i] = "http://"+endpoints[i]
+        }
         ret, err = NewEtcdConfig(nodeName, endpoints, prefix)
     default:
         err = fmt.Errorf("unknown config class")
     }
     return
 }
+

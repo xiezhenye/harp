@@ -2,9 +2,10 @@ package config
 
 import (
 "time"
-//"github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context"
+"github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context"
 "github.com/coreos/etcd/client"
 "sync"
+"fmt"
 )
 
 const (
@@ -35,6 +36,7 @@ func NewEtcdConfig(nodeId string, endpoints []string, prefix string) (ret *EtcdC
         // set timeout per request to fail fast when the target endpoint is unavailable
         HeaderTimeoutPerRequest: time.Second,
     }
+    ret.isActive = false
     ret.client, err = client.New(cfg)
     if err != nil {
         return
@@ -59,23 +61,32 @@ func (self *EtcdConfig) GetMacByIp(ip string) string {
 }
 
 func (self *EtcdConfig) keepalive() {
-    /*
-    err := self.kapi.Create("")
-    if err == nil {
-        self.setIsActive(true)
-        //keep update
-        for {
-            err = self.kapi.Update("")
-            //sleep
-        }
-    } else {
-        self.setIsActive(false)
-        for {
-            //watch?grab?
-        }
+    grabOption:= client.SetOptions{
+      PrevExist: client.PrevNoExist,
+      TTL: time.Second * heartbeatTimeout,
     }
-    */
-}
+    heartbeatOption:= client.SetOptions{
+      TTL: time.Second * heartbeatTimeout,
+    }
+    for {
+      var opt *client.SetOptions
+      if self.IsActive() {
+        opt = &heartbeatOption
+      } else { 
+        opt = &grabOption
+      }
+      _, err := self.kapi.Set(context.Background(), self.prefix+activeNodeKey, self.nodeId, opt)
+      self.setIsActive(err == nil)
+      switch err := err.(type) {
+      case *client.Error:
+      case nil:
+      default:
+        //TODO: unknown error!
+        fmt.Println(err)
+      }
+      time.Sleep(heartbeatInterval)
+    }
+ }
 
 func (self *EtcdConfig) setIsActive(b bool) {
     self.lock.Lock()
@@ -83,13 +94,15 @@ func (self *EtcdConfig) setIsActive(b bool) {
     self.lock.Unlock()
 }
 
-func (self *EtcdConfig) IsActive(b bool) {
+func (self *EtcdConfig) IsActive() (b bool) {
     self.lock.RLock()
     b = self.isActive
     self.lock.RUnlock()
+    return
 }
 
 func (self *EtcdConfig) watchForUpdate() {
-     // watch data, update cache
+  //fetch
+  // watch data, update cache
 }
 
