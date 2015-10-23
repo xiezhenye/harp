@@ -9,6 +9,7 @@ import (
 type FileConfig struct {
     path string
     data map[string]string
+    callback OnUpdateCallback
     lock sync.RWMutex
 }
 
@@ -23,7 +24,7 @@ func (self *FileConfig) GetMacByIp(ip string) string {
 }
 
 func (self *FileConfig) SetOnChange(callback OnChangeCallback) {
-    
+    self.callback = callback
 }
 
 func (self *FileConfig) Path() string {

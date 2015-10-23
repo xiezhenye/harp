@@ -124,7 +124,6 @@ func (self *EtcdConfig) watchForUpdate() {
     }
   }
   for {
-    //fmt.Println(lastIndex)
     resp, err = self.kapi.Watcher(self.prefix+dataKey, &client.WatcherOptions{
       Recursive:true, AfterIndex:lastIndex,
     }).Next(context.Background())
@@ -134,17 +133,18 @@ func (self *EtcdConfig) watchForUpdate() {
     lastIndex = resp.Index
     node:= resp.Node
     key:= node.Key[strings.LastIndex(node.Key, "/")+1:]
+    value:= ""
     switch resp.Action {
     case "set":
       self.cache[key] = node.Value
-      fmt.Printf("%v -> %v\n", key, node.Value)
-      self.callback(key, node.Value)
+      value= node.Value
     case "delete":
       delete(self.cache, key)
-      fmt.Printf("%v -> %v\n", key, nil)
-      self.callback(key, "")
+    }
+    fmt.Printf("%v -> %v\n", key, balue)
+    if self.callback != nil {
+        self.callback(key, value)
     }
   }  
-// watch data, update cache
 }
 
