@@ -9,7 +9,7 @@ import (
 type FileConfig struct {
     path string
     data map[string]string
-    callback OnUpdateCallback
+    callback OnChangeCallback
     lock sync.RWMutex
 }
 

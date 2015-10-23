@@ -138,7 +138,7 @@ func (self *EtcdConfig) watchForUpdate() {
     switch resp.Action {
     case "set":
       self.cache[key] = node.Value
-      value= node.Value
+      value = node.Value
     case "delete":
       delete(self.cache, key)
     }
