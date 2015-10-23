@@ -22,6 +22,10 @@ func (self *FileConfig) GetMacByIp(ip string) string {
     return mac
 }
 
+func (self *FileConfig) SetOnChange(callback OnChangeCallback) {
+    
+}
+
 func (self *FileConfig) Path() string {
     return self.path
 }
