@@ -19,19 +19,22 @@ func parseFlags(conf *string, dev *string) {
 func main() {
   var confDesc, devName string
   parseFlags(&confDesc, &devName)
-  conf, err := config.NewConfig(confDesc)
-  if err != nil {
-    fmt.Println(err)
-    return
-  }
   dev, err := net.InterfaceByName(devName)
   listener, err := arp.NewListener()
   if err != nil {
+    fmt.Println("listenning raw socket failed")
     fmt.Println(err)
     return
   }
   defer listener.Close()
-  
+
+  conf, err := config.NewConfig(confDesc)
+  if err != nil {
+    fmt.Println("load config file failed")
+    fmt.Println(err)
+    return
+  }
+ 
   conf.SetOnChange(func(ip string, mac string){
     if mac == "" {
       return
@@ -39,9 +42,12 @@ func main() {
     ipAddr:= net.ParseIP(ip)
     hwAddr, err:= net.ParseMAC(mac)
     if err != nil {
+      fmt.Println("parse mac addr failed: " + mac)
       return
     }
-    listener.Send(arp.GratuitousArpOp(ipAddr, hwAddr), arp.AddrFromInterface(dev))
+    fmt.Printf("%s => %s\n", ipAddr, hwAddr)
+    g := arp.GratuitousArpOp(ipAddr, hwAddr)
+    listener.Send(g, arp.AddrFromInterface(dev))
   })
   listener.Listen(func(op arp.ArpOp, addr arp.Addr){
     if op.Op != arp.ARP_REQUEST {
@@ -57,6 +63,7 @@ func main() {
     reply.SndrIpAddr = op.RcptIpAddr
     reply.SndrHwAddr, err = net.ParseMAC(mac)
     if err != nil {
+      fmt.Println("parse mac addr failed: " + mac)
       return
     }
     reply.RcptIpAddr = op.SndrIpAddr

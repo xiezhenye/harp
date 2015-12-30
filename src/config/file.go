@@ -7,6 +7,7 @@ import (
 "os"
 "os/signal"
 "syscall"
+"fmt"
 )
 
 type FileConfig struct {
@@ -49,7 +50,17 @@ func (self *FileConfig) Reload() (err error) {
     }
     self.lock.Lock()
     defer self.lock.Unlock()
-    err = json.Unmarshal(content, &self.data)
+    t := make(map[string]string)
+    err = json.Unmarshal(content, &t)
+    if err != nil {
+        return
+    }
+    self.data = t
+    if self.callback != nil {
+        for ip, mac := range(self.data) {
+            self.callback(ip, mac)
+        }
+    }
     return
 }
 
@@ -60,7 +71,12 @@ func (self *FileConfig) SignalHandler() {
   for {
     // Block until a signal is received.
     <-c
-    self.Reload() 
+    err := self.Reload() 
+    if err != nil {
+      fmt.Println("reload failed")
+    } else {
+      fmt.Println("reload ok")
+    }
   }
 }
 

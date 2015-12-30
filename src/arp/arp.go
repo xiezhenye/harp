@@ -80,14 +80,15 @@ func (self *ArpOp) ArpPacket() ArpPacket {
   copy(ret.SrcHwAddr[:],  self.SndrHwAddr)
   copy(ret.SndrHwAddr[:], self.SndrHwAddr)
   copy(ret.RcptHwAddr[:], self.RcptHwAddr)
-  copy(ret.SndrIpAddr[:], self.SndrIpAddr)
-  copy(ret.RcptIpAddr[:], self.RcptIpAddr)
+  copy(ret.SndrIpAddr[:], self.SndrIpAddr.To4())
+  copy(ret.RcptIpAddr[:], self.RcptIpAddr.To4())
   return ret
 }
 
 func GratuitousArpOp(ip net.IP, hwAddr net.HardwareAddr) ArpOp {
   var ret ArpOp
-  ret.Op = ARP_REQUEST
+  ret.Op = ARP_REPLY
+  //ret.Op = ARP_REQUEST
   ret.SndrIpAddr = ip
   ret.RcptIpAddr = ip
   ret.SndrHwAddr = hwAddr
@@ -136,7 +137,7 @@ func (self *ArpListener) Listen(reciever ArpReciever) {
     }
     //fmt.Println("in:")
     //fmt.Println(packet)
-    reciever(packet.ArpOp(), from)
+    go reciever(packet.ArpOp(), from)
   }
 }
 
@@ -150,6 +151,7 @@ func (self *ArpListener) Send(op ArpOp, addr Addr) error {
   if err != nil {
     return err
   }
+  //fmt.Println(op, ifi)
   lla := syscall.SockaddrLinklayer{Protocol: htons(syscall.ETH_P_ARP), Ifindex: ifi.Index}
   return syscall.Sendto(self.sock, buf, 0, &lla)
 
